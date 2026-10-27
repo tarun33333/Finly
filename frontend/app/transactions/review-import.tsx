@@ -15,6 +15,7 @@ import { useThemeStore } from '../../src/store/themeStore';
 import { apiClient } from '../../src/services/api/client';
 import { Button } from '../../src/components/buttons/Button';
 import { Category, TransactionType, PaymentMethod, PaymentStatus } from '../../src/types';
+import { deduplicateCategories } from '../../src/utils/category';
 import {
   ArrowLeft,
   Sparkles,
@@ -56,10 +57,12 @@ export default function ReviewImportScreen() {
   const [loading, setLoading] = useState(false);
 
   // Fetch categories for type
-  const { data: categories } = useQuery<Category[]>({
+  const { data: rawCategories } = useQuery<Category[]>({
     queryKey: ['categories', type],
     queryFn: () => apiClient.get(`/categories?type=${type}`),
   });
+
+  const categories = React.useMemo(() => deduplicateCategories(rawCategories), [rawCategories]);
 
   React.useEffect(() => {
     if (categories && categories.length > 0 && !selectedCategoryId) {
@@ -113,8 +116,15 @@ export default function ReviewImportScreen() {
       await queryClient.invalidateQueries({ queryKey: ['financial-summary'] });
       await queryClient.invalidateQueries({ queryKey: ['recent-transactions'] });
       await queryClient.invalidateQueries({ queryKey: ['transactions-list'] });
+      await queryClient.invalidateQueries({ queryKey: ['spending-trend'] });
       await queryClient.invalidateQueries({ queryKey: ['spending-trend-7'] });
       await queryClient.invalidateQueries({ queryKey: ['category-breakdown'] });
+      await queryClient.invalidateQueries({ queryKey: ['home-budgets'] });
+      await queryClient.invalidateQueries({ queryKey: ['analytics-overview'] });
+      await queryClient.invalidateQueries({ queryKey: ['analytics-trend'] });
+      await queryClient.invalidateQueries({ queryKey: ['analytics-categories'] });
+      await queryClient.invalidateQueries({ queryKey: ['analytics-payments'] });
+      await queryClient.invalidateQueries({ queryKey: ['analytics-merchants'] });
 
       Alert.alert('Transaction Recorded', 'Your payment was confirmed and added to your finances.', [
         { text: 'Done', onPress: () => router.replace('/(tabs)') },

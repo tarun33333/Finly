@@ -47,16 +47,33 @@ export default function ProcessingUploadScreen() {
         const mimeType = ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : 'image/jpeg';
         const filename = cleanFilename.includes('.') ? cleanFilename : `upload.${ext}`;
 
-        if (Platform.OS === 'web') {
+        const fieldName = mode === 'upi' ? 'screenshot' : 'receipt';
+
+        // In Expo SDK 58 / React Native 0.88, WinterCG fetch requires standard Blob or File
+        let filePart: any = null;
+        try {
           const res = await fetch(imageUri);
-          const blob = await res.blob();
-          formData.append(mode === 'upi' ? 'screenshot' : 'receipt', blob, filename);
+          const rawBlob = await res.blob();
+          if (rawBlob) {
+            filePart = rawBlob.slice(0, rawBlob.size, mimeType);
+          }
+        } catch (fetchErr) {
+          console.warn('Fetch to blob failed, attempting File class fallback:', fetchErr);
+        }
+
+        if (filePart) {
+          formData.append(fieldName, filePart, filename);
         } else {
-          formData.append(mode === 'upi' ? 'screenshot' : 'receipt', {
-            uri: imageUri,
-            name: filename,
-            type: mimeType,
-          } as any);
+          try {
+            const { File: ExpoFile } = await import('expo-file-system');
+            formData.append(fieldName, new ExpoFile(imageUri));
+          } catch {
+            formData.append(fieldName, {
+              uri: imageUri,
+              name: filename,
+              type: mimeType,
+            } as any);
+          }
         }
 
         const endpoint = mode === 'upi' ? '/uploads/upi-screenshot' : '/uploads/receipt';

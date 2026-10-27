@@ -44,6 +44,14 @@ export default function TransactionDetailScreen() {
       await queryClient.invalidateQueries({ queryKey: ['financial-summary'] });
       await queryClient.invalidateQueries({ queryKey: ['recent-transactions'] });
       await queryClient.invalidateQueries({ queryKey: ['transactions-list'] });
+      await queryClient.invalidateQueries({ queryKey: ['spending-trend'] });
+      await queryClient.invalidateQueries({ queryKey: ['category-breakdown'] });
+      await queryClient.invalidateQueries({ queryKey: ['home-budgets'] });
+      await queryClient.invalidateQueries({ queryKey: ['analytics-overview'] });
+      await queryClient.invalidateQueries({ queryKey: ['analytics-trend'] });
+      await queryClient.invalidateQueries({ queryKey: ['analytics-categories'] });
+      await queryClient.invalidateQueries({ queryKey: ['analytics-payments'] });
+      await queryClient.invalidateQueries({ queryKey: ['analytics-merchants'] });
       router.back();
     },
     onError: (err: any) => {

@@ -114,7 +114,7 @@ describe('Finly Backend API Tests', () => {
   });
 
   describe('Categories & Transactions', () => {
-    it('GET /api/v1/categories should return seeded categories', async () => {
+    it('GET /api/v1/categories should return seeded categories without any duplicate names', async () => {
       const res = await request(app)
         .get('/api/v1/categories')
         .set('Authorization', `Bearer ${userAToken}`);
@@ -124,6 +124,11 @@ describe('Finly Backend API Tests', () => {
       const foodCat = res.body.data.find((c: any) => c.name === 'Food & Dining');
       expect(foodCat).toBeDefined();
       categoryId = foodCat._id;
+
+      // Verify ZERO duplicate category names exist in the response
+      const names = res.body.data.map((c: any) => `${c.type}:${c.name.toLowerCase()}`);
+      const uniqueNames = new Set(names);
+      expect(uniqueNames.size).toBe(names.length);
     });
 
     it('POST /api/v1/transactions should create an expense in INR', async () => {

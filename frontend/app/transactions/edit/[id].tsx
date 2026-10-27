@@ -17,6 +17,7 @@ import { apiClient } from '../../../src/services/api/client';
 import { Button } from '../../../src/components/buttons/Button';
 import { Category, Transaction, PaymentMethod } from '../../../src/types';
 import { ArrowLeft } from 'lucide-react-native';
+import { deduplicateCategories } from '../../../src/utils/category';
 
 const PAYMENT_METHODS: PaymentMethod[] = [
   'UPI',
@@ -58,11 +59,13 @@ export default function EditTransactionScreen() {
     }
   }, [transaction]);
 
-  const { data: categories } = useQuery<Category[]>({
+  const { data: rawCategories } = useQuery<Category[]>({
     queryKey: ['categories', transaction?.type || 'expense'],
     queryFn: () => apiClient.get(`/categories?type=${transaction?.type || 'expense'}`),
     enabled: !!transaction,
   });
+
+  const categories = React.useMemo(() => deduplicateCategories(rawCategories), [rawCategories]);
 
   const handleUpdate = async () => {
     const numAmount = parseFloat(amount);
@@ -86,6 +89,14 @@ export default function EditTransactionScreen() {
       await queryClient.invalidateQueries({ queryKey: ['financial-summary'] });
       await queryClient.invalidateQueries({ queryKey: ['recent-transactions'] });
       await queryClient.invalidateQueries({ queryKey: ['transactions-list'] });
+      await queryClient.invalidateQueries({ queryKey: ['spending-trend'] });
+      await queryClient.invalidateQueries({ queryKey: ['category-breakdown'] });
+      await queryClient.invalidateQueries({ queryKey: ['home-budgets'] });
+      await queryClient.invalidateQueries({ queryKey: ['analytics-overview'] });
+      await queryClient.invalidateQueries({ queryKey: ['analytics-trend'] });
+      await queryClient.invalidateQueries({ queryKey: ['analytics-categories'] });
+      await queryClient.invalidateQueries({ queryKey: ['analytics-payments'] });
+      await queryClient.invalidateQueries({ queryKey: ['analytics-merchants'] });
 
       router.back();
     } catch (err: any) {

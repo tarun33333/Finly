@@ -1,14 +1,15 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useThemeStore } from '../../store/themeStore';
 import { formatINR } from '../../utils/currency';
-import { ArrowDownLeft, ArrowUpRight, ShieldAlert } from 'lucide-react-native';
+import { ArrowDownLeft, ArrowUpRight, ShieldAlert, Eye, EyeOff, Sparkles } from 'lucide-react-native';
 
 interface BalanceCardProps {
   balance: number;
   income: number;
   expense: number;
   monthName?: string;
+  savingsRate?: number;
 }
 
 export const BalanceCard: React.FC<BalanceCardProps> = ({
@@ -16,8 +17,18 @@ export const BalanceCard: React.FC<BalanceCardProps> = ({
   income,
   expense,
   monthName,
+  savingsRate,
 }) => {
   const { theme } = useThemeStore();
+  const [hideBalance, setHideBalance] = useState(false);
+
+  // Compute savings rate if not explicitly passed
+  const calculatedSavingsRate =
+    savingsRate !== undefined
+      ? savingsRate
+      : income > 0
+      ? Math.max(0, Math.round(((income - expense) / income) * 100))
+      : 0;
 
   return (
     <View
@@ -32,12 +43,25 @@ export const BalanceCard: React.FC<BalanceCardProps> = ({
     >
       {/* Top Header */}
       <View style={styles.topRow}>
-        <View>
-          <Text style={[styles.subtitleText, { color: 'rgba(255, 255, 255, 0.8)' }]}>
-            Total Tracked Balance
-          </Text>
+        <View style={{ flex: 1 }}>
+          <View style={styles.titleRow}>
+            <Text style={[styles.subtitleText, { color: 'rgba(255, 255, 255, 0.85)' }]}>
+              Estimated Available Balance
+            </Text>
+            <TouchableOpacity
+              onPress={() => setHideBalance(!hideBalance)}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              style={styles.eyeBtn}
+            >
+              {hideBalance ? (
+                <EyeOff size={16} color="rgba(255, 255, 255, 0.8)" />
+              ) : (
+                <Eye size={16} color="rgba(255, 255, 255, 0.8)" />
+              )}
+            </TouchableOpacity>
+          </View>
           <Text style={[styles.balanceAmount, { color: theme.colors.white }]}>
-            {formatINR(balance)}
+            {hideBalance ? '••••••••' : formatINR(balance)}
           </Text>
         </View>
 
@@ -48,24 +72,55 @@ export const BalanceCard: React.FC<BalanceCardProps> = ({
         )}
       </View>
 
-      {/* Balance disclaimer (Section 8: Finly must not claim access to real bank balances) */}
-      <View style={styles.disclaimerRow}>
-        <ShieldAlert size={12} color="rgba(255, 255, 255, 0.7)" />
-        <Text style={styles.disclaimerText}>
-          Estimated tracked balance based on recorded transactions
-        </Text>
+      {/* Savings Health Rate Meter */}
+      <View style={styles.savingsMeterContainer}>
+        <View style={styles.savingsMeterHeader}>
+          <View style={styles.savingsMeterLabelRow}>
+            <Sparkles size={12} color="#FBBF24" />
+            <Text style={styles.savingsMeterText}>
+              Savings Rate: <Text style={{ fontWeight: '700' }}>{calculatedSavingsRate}%</Text>
+            </Text>
+          </View>
+          <Text style={styles.savingsStatusText}>
+            {calculatedSavingsRate >= 30
+              ? 'Excellent'
+              : calculatedSavingsRate >= 15
+              ? 'Healthy'
+              : calculatedSavingsRate > 0
+              ? 'Fair'
+              : 'Attention Needed'}
+          </Text>
+        </View>
+        <View style={styles.savingsProgressBarBg}>
+          <View
+            style={[
+              styles.savingsProgressBarFill,
+              {
+                width: `${Math.min(100, Math.max(5, calculatedSavingsRate))}%`,
+                backgroundColor:
+                  calculatedSavingsRate >= 25
+                    ? '#34D399'
+                    : calculatedSavingsRate >= 10
+                    ? '#FBBF24'
+                    : '#F87171',
+              },
+            ]}
+          />
+        </View>
       </View>
 
       {/* Income & Expense Breakdown */}
       <View style={styles.metricsContainer}>
         {/* Income Card */}
         <View style={styles.metricItem}>
-          <View style={[styles.iconCircle, { backgroundColor: 'rgba(32, 201, 151, 0.25)' }]}>
-            <ArrowDownLeft size={16} color="#20C997" />
+          <View style={[styles.iconCircle, { backgroundColor: 'rgba(52, 211, 153, 0.25)' }]}>
+            <ArrowDownLeft size={16} color="#34D399" />
           </View>
           <View>
             <Text style={styles.metricLabel}>Income</Text>
-            <Text style={styles.metricValue}>+{formatINR(income)}</Text>
+            <Text style={styles.metricValue}>
+              {hideBalance ? '••••••' : `+${formatINR(income)}`}
+            </Text>
           </View>
         </View>
 
@@ -73,12 +128,14 @@ export const BalanceCard: React.FC<BalanceCardProps> = ({
 
         {/* Expense Card */}
         <View style={styles.metricItem}>
-          <View style={[styles.iconCircle, { backgroundColor: 'rgba(249, 115, 115, 0.25)' }]}>
-            <ArrowUpRight size={16} color="#F97373" />
+          <View style={[styles.iconCircle, { backgroundColor: 'rgba(248, 113, 113, 0.25)' }]}>
+            <ArrowUpRight size={16} color="#F87171" />
           </View>
           <View>
             <Text style={styles.metricLabel}>Expenses</Text>
-            <Text style={styles.metricValue}>-{formatINR(expense)}</Text>
+            <Text style={styles.metricValue}>
+              {hideBalance ? '••••••' : `-${formatINR(expense)}`}
+            </Text>
           </View>
         </View>
       </View>
@@ -98,18 +155,26 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'flex-start',
   },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 4,
+  },
   subtitleText: {
     fontSize: 13,
     fontWeight: '500',
-    marginBottom: 4,
+  },
+  eyeBtn: {
+    padding: 2,
   },
   balanceAmount: {
     fontSize: 32,
-    fontWeight: '700',
+    fontWeight: '800',
     letterSpacing: -0.5,
   },
   badge: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: 'rgba(255, 255, 255, 0.22)',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 14,
@@ -119,19 +184,45 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
   },
-  disclaimerRow: {
+  savingsMeterContainer: {
+    marginTop: 14,
+    backgroundColor: 'rgba(0, 0, 0, 0.15)',
+    borderRadius: 10,
+    padding: 10,
+  },
+  savingsMeterHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  savingsMeterLabelRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 6,
-    gap: 4,
+    gap: 6,
   },
-  disclaimerText: {
+  savingsMeterText: {
+    color: 'rgba(255, 255, 255, 0.9)',
     fontSize: 11,
-    color: 'rgba(255, 255, 255, 0.75)',
+  },
+  savingsStatusText: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  savingsProgressBarBg: {
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    overflow: 'hidden',
+  },
+  savingsProgressBarFill: {
+    height: '100%',
+    borderRadius: 3,
   },
   metricsContainer: {
     flexDirection: 'row',
-    marginTop: 20,
+    marginTop: 16,
     backgroundColor: 'rgba(255, 255, 255, 0.12)',
     borderRadius: 14,
     padding: 12,
@@ -157,7 +248,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   metricLabel: {
-    fontSize: 12,
+    fontSize: 11,
     color: 'rgba(255, 255, 255, 0.8)',
     marginBottom: 2,
   },

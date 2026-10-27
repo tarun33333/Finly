@@ -16,6 +16,7 @@ import { apiClient } from '../../src/services/api/client';
 import { Button } from '../../src/components/buttons/Button';
 import { Category } from '../../src/types';
 import { ArrowLeft, Plus, X } from 'lucide-react-native';
+import { deduplicateCategories } from '../../src/utils/category';
 
 const PRESET_COLORS = ['#635BFF', '#20C997', '#FFB84D', '#F97373', '#EC4899', '#8B5CF6', '#10B981', '#3B82F6'];
 
@@ -29,10 +30,12 @@ export default function CategoriesSettingsScreen() {
   const [newCatName, setNewCatName] = useState('');
   const [selectedColor, setSelectedColor] = useState(PRESET_COLORS[0]);
 
-  const { data: categories, isLoading } = useQuery<Category[]>({
+  const { data: rawCategories, isLoading } = useQuery<Category[]>({
     queryKey: ['categories-settings', activeTab],
     queryFn: () => apiClient.get(`/categories?type=${activeTab}`),
   });
+
+  const categories = React.useMemo(() => deduplicateCategories(rawCategories), [rawCategories]);
 
   const createMutation = useMutation({
     mutationFn: () =>

@@ -16,6 +16,7 @@ import { apiClient } from '../../src/services/api/client';
 import { Button } from '../../src/components/buttons/Button';
 import { Category, TransactionType, PaymentMethod } from '../../src/types';
 import { ArrowLeft, Sparkles, AlertTriangle, Check } from 'lucide-react-native';
+import { deduplicateCategories } from '../../src/utils/category';
 
 const PAYMENT_METHODS: PaymentMethod[] = [
   'UPI',
@@ -46,10 +47,12 @@ export default function AddTransactionScreen() {
   const [duplicateWarning, setDuplicateWarning] = useState<string | null>(null);
 
   // Fetch categories
-  const { data: categories } = useQuery<Category[]>({
+  const { data: rawCategories } = useQuery<Category[]>({
     queryKey: ['categories', type],
     queryFn: () => apiClient.get(`/categories?type=${type}`),
   });
+
+  const categories = React.useMemo(() => deduplicateCategories(rawCategories), [rawCategories]);
 
   // Auto-select valid category when loaded or when type changes
   React.useEffect(() => {
@@ -142,8 +145,15 @@ export default function AddTransactionScreen() {
       await queryClient.invalidateQueries({ queryKey: ['financial-summary'] });
       await queryClient.invalidateQueries({ queryKey: ['recent-transactions'] });
       await queryClient.invalidateQueries({ queryKey: ['transactions-list'] });
+      await queryClient.invalidateQueries({ queryKey: ['spending-trend'] });
       await queryClient.invalidateQueries({ queryKey: ['spending-trend-7'] });
       await queryClient.invalidateQueries({ queryKey: ['category-breakdown'] });
+      await queryClient.invalidateQueries({ queryKey: ['home-budgets'] });
+      await queryClient.invalidateQueries({ queryKey: ['analytics-overview'] });
+      await queryClient.invalidateQueries({ queryKey: ['analytics-trend'] });
+      await queryClient.invalidateQueries({ queryKey: ['analytics-categories'] });
+      await queryClient.invalidateQueries({ queryKey: ['analytics-payments'] });
+      await queryClient.invalidateQueries({ queryKey: ['analytics-merchants'] });
 
       router.back();
     } catch (err: any) {

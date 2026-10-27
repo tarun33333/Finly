@@ -4,11 +4,28 @@ import { getMonthDateRange } from '../utils/date';
 import { toRupees } from '../utils/currency';
 
 class AnalyticsService {
+  private resolveDateRange(year?: number, month?: number, customStartDate?: string, customEndDate?: string) {
+    if (customStartDate && customEndDate) {
+      const startDate = new Date(customStartDate);
+      startDate.setHours(0, 0, 0, 0);
+      const endDate = new Date(customEndDate);
+      endDate.setHours(23, 59, 59, 999);
+      return { startDate, endDate };
+    }
+    return getMonthDateRange(year, month);
+  }
+
   /**
-   * Analytics Overview for a specific month/year
+   * Analytics Overview for a specific month/year or custom date range
    */
-  async getOverview(userId: string | mongoose.Types.ObjectId, year?: number, month?: number) {
-    const { startDate, endDate } = getMonthDateRange(year, month);
+  async getOverview(
+    userId: string | mongoose.Types.ObjectId,
+    year?: number,
+    month?: number,
+    customStartDate?: string,
+    customEndDate?: string
+  ) {
+    const { startDate, endDate } = this.resolveDateRange(year, month, customStartDate, customEndDate);
     const uId = new mongoose.Types.ObjectId(userId.toString());
 
     const result = await Transaction.aggregate([
@@ -64,14 +81,29 @@ class AnalyticsService {
   }
 
   /**
-   * Daily spending trend (e.g. last 7 or 30 days)
+   * Daily spending trend (e.g. last 7 or 30 days, or custom date range)
    */
-  async getSpendingTrend(userId: string | mongoose.Types.ObjectId, days = 7) {
+  async getSpendingTrend(
+    userId: string | mongoose.Types.ObjectId,
+    days = 7,
+    customStartDate?: string,
+    customEndDate?: string
+  ) {
     const uId = new mongoose.Types.ObjectId(userId.toString());
-    const endDate = new Date();
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - (days - 1));
-    startDate.setHours(0, 0, 0, 0);
+    let startDate: Date;
+    let endDate: Date;
+
+    if (customStartDate && customEndDate) {
+      startDate = new Date(customStartDate);
+      startDate.setHours(0, 0, 0, 0);
+      endDate = new Date(customEndDate);
+      endDate.setHours(23, 59, 59, 999);
+    } else {
+      endDate = new Date();
+      startDate = new Date();
+      startDate.setDate(startDate.getDate() - (days - 1));
+      startDate.setHours(0, 0, 0, 0);
+    }
 
     const results = await Transaction.aggregate([
       {
@@ -117,8 +149,14 @@ class AnalyticsService {
   /**
    * Category expense breakdown with percentage
    */
-  async getCategoryBreakdown(userId: string | mongoose.Types.ObjectId, year?: number, month?: number) {
-    const { startDate, endDate } = getMonthDateRange(year, month);
+  async getCategoryBreakdown(
+    userId: string | mongoose.Types.ObjectId,
+    year?: number,
+    month?: number,
+    customStartDate?: string,
+    customEndDate?: string
+  ) {
+    const { startDate, endDate } = this.resolveDateRange(year, month, customStartDate, customEndDate);
     const uId = new mongoose.Types.ObjectId(userId.toString());
 
     const result = await Transaction.aggregate([
@@ -169,8 +207,14 @@ class AnalyticsService {
   /**
    * Payment method breakdown (UPI, Cash, etc.)
    */
-  async getPaymentMethodBreakdown(userId: string | mongoose.Types.ObjectId, year?: number, month?: number) {
-    const { startDate, endDate } = getMonthDateRange(year, month);
+  async getPaymentMethodBreakdown(
+    userId: string | mongoose.Types.ObjectId,
+    year?: number,
+    month?: number,
+    customStartDate?: string,
+    customEndDate?: string
+  ) {
+    const { startDate, endDate } = this.resolveDateRange(year, month, customStartDate, customEndDate);
     const uId = new mongoose.Types.ObjectId(userId.toString());
 
     const result = await Transaction.aggregate([
@@ -250,16 +294,29 @@ class AnalyticsService {
   /**
    * Top merchants by total spending
    */
-  async getTopMerchants(userId: string | mongoose.Types.ObjectId, limit = 5) {
+  async getTopMerchants(
+    userId: string | mongoose.Types.ObjectId,
+    limit = 5,
+    customStartDate?: string,
+    customEndDate?: string
+  ) {
     const uId = new mongoose.Types.ObjectId(userId.toString());
+    const match: any = {
+      userId: uId,
+      type: 'expense',
+      paymentStatus: 'success',
+      merchant: { $ne: '' },
+    };
+
+    if (customStartDate || customEndDate) {
+      match.transactionDate = {};
+      if (customStartDate) match.transactionDate.$gte = new Date(customStartDate);
+      if (customEndDate) match.transactionDate.$lte = new Date(customEndDate);
+    }
+
     const result = await Transaction.aggregate([
       {
-        $match: {
-          userId: uId,
-          type: 'expense',
-          paymentStatus: 'success',
-          merchant: { $ne: '' },
-        },
+        $match: match,
       },
       {
         $group: {

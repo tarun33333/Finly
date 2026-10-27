@@ -16,6 +16,7 @@ import { apiClient } from '../../src/services/api/client';
 import { Button } from '../../src/components/buttons/Button';
 import { Category } from '../../src/types';
 import { ArrowLeft } from 'lucide-react-native';
+import { deduplicateCategories } from '../../src/utils/category';
 
 export default function CreateBudgetScreen() {
   const router = useRouter();
@@ -28,10 +29,12 @@ export default function CreateBudgetScreen() {
   const [period, setPeriod] = useState<'monthly' | 'weekly'>('monthly');
   const [loading, setLoading] = useState(false);
 
-  const { data: categories } = useQuery<Category[]>({
+  const { data: rawCategories } = useQuery<Category[]>({
     queryKey: ['categories', 'expense'],
     queryFn: () => apiClient.get('/categories?type=expense'),
   });
+
+  const categories = React.useMemo(() => deduplicateCategories(rawCategories), [rawCategories]);
 
   const handleCreate = async () => {
     const numLimit = parseFloat(limitAmount);

@@ -178,6 +178,9 @@ class TransactionService {
 
     const sortOption: any = {};
     sortOption[sortBy] = sortOrder === 'asc' ? 1 : -1;
+    if (sortBy !== 'createdAt') {
+      sortOption.createdAt = -1;
+    }
 
     const skip = (page - 1) * limit;
 
