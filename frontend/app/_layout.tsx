@@ -1,11 +1,13 @@
 import React, { useEffect } from 'react';
-import { Stack } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useThemeStore } from '../src/store/themeStore';
 import { useAuthStore } from '../src/store/authStore';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { View, ActivityIndicator } from 'react-native';
+import * as Linking from 'expo-linking';
+import { storage } from '../src/utils/storage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -17,12 +19,40 @@ const queryClient = new QueryClient({
 });
 
 function RootNavigator() {
+  const router = useRouter();
   const { theme, isDark, initTheme } = useThemeStore();
   const { restoreSession, isLoading } = useAuthStore();
 
   useEffect(() => {
     initTheme();
     restoreSession();
+
+    // Deep link listener for OAuth redirect (e.g. finly://auth/callback?accessToken=...&refreshToken=...)
+    const handleDeepLink = async (event: { url: string }) => {
+      try {
+        const parsed = Linking.parse(event.url);
+        const accessToken = (parsed.queryParams?.accessToken as string) || '';
+        const refreshToken = (parsed.queryParams?.refreshToken as string) || '';
+
+        if (accessToken && refreshToken) {
+          await storage.setSecureItem('finly_access_token', accessToken);
+          await storage.setSecureItem('finly_refresh_token', refreshToken);
+          await restoreSession();
+          router.replace('/(tabs)');
+        }
+      } catch (err) {
+        console.warn('Error handling deep link:', err);
+      }
+    };
+
+    const subscription = Linking.addEventListener('url', handleDeepLink);
+    Linking.getInitialURL().then((url) => {
+      if (url) handleDeepLink({ url });
+    });
+
+    return () => {
+      subscription.remove();
+    };
   }, []);
 
   if (isLoading) {

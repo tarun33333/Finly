@@ -17,6 +17,8 @@ const router = Router();
 
 router.post('/register', authLimiter, validate(registerSchema), AuthController.register);
 router.post('/login', authLimiter, validate(loginSchema), AuthController.login);
+router.get('/google/url', AuthController.getGoogleAuthUrl);
+router.get('/google/callback', AuthController.googleCallback);
 router.post('/google', authLimiter, validate(googleAuthSchema), AuthController.googleAuth);
 router.post('/refresh', validate(refreshTokenSchema), AuthController.refresh);
 router.post('/logout', AuthController.logout);

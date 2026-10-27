@@ -145,12 +145,22 @@ class CategorizationService {
     // 2. Check deterministic keyword rules
     for (const [keyword, categoryName] of Object.entries(MERCHANT_KEYWORD_RULES)) {
       if (combinedText.includes(keyword)) {
-        const cat = await Category.findOne({
-          $or: [{ userId }, { userId: null, isDefault: true }],
+        let cat = await Category.findOne({
+          userId,
           name: categoryName,
           type: transactionType,
           isActive: true,
         });
+
+        if (!cat) {
+          cat = await Category.findOne({
+            userId: null,
+            isDefault: true,
+            name: categoryName,
+            type: transactionType,
+            isActive: true,
+          });
+        }
 
         if (cat) {
           return {
@@ -164,11 +174,22 @@ class CategorizationService {
 
     // 3. Fallback to default "Other" or "Other Income"
     const fallbackName = transactionType === 'income' ? 'Other Income' : 'Other';
-    const fallbackCat = await Category.findOne({
-      $or: [{ userId }, { userId: null, isDefault: true }],
+    let fallbackCat = await Category.findOne({
+      userId,
       name: fallbackName,
       type: transactionType,
+      isActive: true,
     });
+
+    if (!fallbackCat) {
+      fallbackCat = await Category.findOne({
+        userId: null,
+        isDefault: true,
+        name: fallbackName,
+        type: transactionType,
+        isActive: true,
+      });
+    }
 
     if (fallbackCat) {
       return {

@@ -9,13 +9,15 @@ import {
   Platform,
   ScrollView,
   Alert,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useAuthStore } from '../../src/store/authStore';
 import { useThemeStore } from '../../src/store/themeStore';
 import { Button } from '../../src/components/buttons/Button';
-import { Eye, EyeOff, Lock, Mail, ArrowLeft, Fingerprint } from 'lucide-react-native';
+import { GoogleButton } from '../../src/components/buttons/GoogleButton';
+import { Eye, EyeOff, Lock, Mail, ArrowLeft, Fingerprint, Sparkles } from 'lucide-react-native';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -76,7 +78,14 @@ export default function LoginScreen() {
 
           {/* Header */}
           <View style={styles.header}>
-            <Text style={[styles.title, { color: theme.colors.textPrimary }]}>Welcome back</Text>
+            <View style={[styles.logoWrapper, { shadowColor: theme.colors.primary }]}>
+              <Image
+                source={require('../../assets/images/logo.png')}
+                style={styles.logoImage}
+                resizeMode="contain"
+              />
+            </View>
+            <Text style={[styles.title, { color: theme.colors.textPrimary }]}>Welcome back 👋</Text>
             <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>
               Sign in to keep tracking every rupee with Finly.
             </Text>
@@ -93,17 +102,28 @@ export default function LoginScreen() {
             >
               <Fingerprint size={28} color={theme.colors.primary} />
               <View style={{ flex: 1, marginLeft: 12 }}>
-                <Text style={[styles.biometricTitle, { color: theme.colors.textPrimary }]}>
+                <Text style={[styles.bioTitle, { color: theme.colors.textPrimary }]}>
                   Unlock with Biometrics
                 </Text>
-                <Text style={[styles.biometricDesc, { color: theme.colors.textSecondary }]}>
-                  Tap to use Face ID or Fingerprint
+                <Text style={[styles.bioSub, { color: theme.colors.textSecondary }]}>
+                  Touch sensor or use Face ID to quickly enter
                 </Text>
               </View>
             </TouchableOpacity>
           )}
 
-          {/* Error Banner */}
+          {/* Google Sign In Button */}
+          <GoogleButton
+            onSuccess={() => router.replace('/(tabs)')}
+            style={styles.googleBtn}
+          />
+
+          <View style={styles.dividerRow}>
+            <View style={[styles.dividerLine, { backgroundColor: theme.colors.border }]} />
+            <Text style={[styles.dividerText, { color: theme.colors.textMuted }]}>or with email</Text>
+            <View style={[styles.dividerLine, { backgroundColor: theme.colors.border }]} />
+          </View>
+
           {errorMessage ? (
             <View style={[styles.errorBox, { backgroundColor: `${theme.colors.expense}15` }]}>
               <Text style={[styles.errorText, { color: theme.colors.expense }]}>
@@ -116,27 +136,24 @@ export default function LoginScreen() {
           <View style={styles.form}>
             {/* Email Field */}
             <View style={styles.inputGroup}>
-              <Text style={[styles.label, { color: theme.colors.textSecondary }]}>Email Address</Text>
+              <Text style={[styles.label, { color: theme.colors.textPrimary }]}>Email Address</Text>
               <View
                 style={[
                   styles.inputWrapper,
-                  {
-                    backgroundColor: theme.colors.surface,
-                    borderColor: theme.colors.border,
-                  },
+                  { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
                 ]}
               >
-                <Mail size={18} color={theme.colors.textSecondary} style={styles.inputIcon} />
+                <Mail size={18} color={theme.colors.textMuted} style={styles.inputIcon} />
                 <TextInput
                   value={email}
                   onChangeText={(val) => {
                     setEmail(val);
                     setErrorMessage('');
                   }}
-                  placeholder="e.g. rahul@finly.app"
+                  placeholder="name@example.com"
                   placeholderTextColor={theme.colors.textMuted}
-                  autoCapitalize="none"
                   keyboardType="email-address"
+                  autoCapitalize="none"
                   style={[styles.input, { color: theme.colors.textPrimary }]}
                 />
               </View>
@@ -145,10 +162,10 @@ export default function LoginScreen() {
             {/* Password Field */}
             <View style={styles.inputGroup}>
               <View style={styles.labelRow}>
-                <Text style={[styles.label, { color: theme.colors.textSecondary }]}>Password</Text>
+                <Text style={[styles.label, { color: theme.colors.textPrimary }]}>Password</Text>
                 <TouchableOpacity onPress={() => router.push('/(auth)/forgot-password')}>
-                  <Text style={[styles.forgotLink, { color: theme.colors.primary }]}>
-                    Forgot password?
+                  <Text style={[styles.forgotText, { color: theme.colors.primary }]}>
+                    Forgot Password?
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -156,44 +173,42 @@ export default function LoginScreen() {
               <View
                 style={[
                   styles.inputWrapper,
-                  {
-                    backgroundColor: theme.colors.surface,
-                    borderColor: theme.colors.border,
-                  },
+                  { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
                 ]}
               >
-                <Lock size={18} color={theme.colors.textSecondary} style={styles.inputIcon} />
+                <Lock size={18} color={theme.colors.textMuted} style={styles.inputIcon} />
                 <TextInput
                   value={password}
                   onChangeText={(val) => {
                     setPassword(val);
                     setErrorMessage('');
                   }}
-                  placeholder="Enter your password"
+                  placeholder="••••••••"
                   placeholderTextColor={theme.colors.textMuted}
                   secureTextEntry={!showPassword}
                   style={[styles.input, { color: theme.colors.textPrimary }]}
                 />
-                <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeBtn}>
                   {showPassword ? (
-                    <EyeOff size={18} color={theme.colors.textSecondary} />
+                    <EyeOff size={18} color={theme.colors.textMuted} />
                   ) : (
-                    <Eye size={18} color={theme.colors.textSecondary} />
+                    <Eye size={18} color={theme.colors.textMuted} />
                   )}
                 </TouchableOpacity>
               </View>
             </View>
 
-            {/* Login Button */}
+            {/* Submit Button */}
             <Button
               title="Sign In"
               size="lg"
-              onPress={handleLogin}
+              variant="primary"
               loading={loading}
+              onPress={handleLogin}
               style={{ marginTop: 8 }}
             />
 
-            {/* Quick Demo Fill Button */}
+            {/* Quick Demo Fill Helper */}
             <TouchableOpacity
               onPress={handleDemoFill}
               style={[
@@ -201,13 +216,14 @@ export default function LoginScreen() {
                 { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
               ]}
             >
-              <Text style={[styles.demoBtnText, { color: theme.colors.primary }]}>
-                ⚡ Fill Demo Account (demo@finly.app)
+              <Sparkles size={14} color={theme.colors.accent} />
+              <Text style={[styles.demoText, { color: theme.colors.textSecondary }]}>
+                Quick Demo Sign-In Fill
               </Text>
             </TouchableOpacity>
           </View>
 
-          {/* Switch to Signup */}
+          {/* Footer Signup Link */}
           <View style={styles.footer}>
             <Text style={[styles.footerText, { color: theme.colors.textSecondary }]}>
               Don't have an account?{' '}
@@ -228,28 +244,48 @@ const styles = StyleSheet.create({
   },
   container: {
     paddingHorizontal: 24,
-    paddingTop: 16,
-    paddingBottom: 32,
+    paddingTop: 12,
+    paddingBottom: 40,
   },
   backBtn: {
     width: 40,
     height: 40,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 20,
-  },
-  header: {
-    marginBottom: 28,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '800',
-    letterSpacing: -0.5,
     marginBottom: 8,
   },
+  header: {
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  logoWrapper: {
+    width: 72,
+    height: 72,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  logoImage: {
+    width: 68,
+    height: 68,
+    borderRadius: 18,
+  },
+  title: {
+    fontSize: 26,
+    fontWeight: '800',
+    letterSpacing: -0.5,
+    marginBottom: 6,
+  },
   subtitle: {
-    fontSize: 14,
-    lineHeight: 20,
+    fontSize: 13,
+    textAlign: 'center',
+    lineHeight: 18,
+    paddingHorizontal: 16,
   },
   biometricCard: {
     flexDirection: 'row',
@@ -257,15 +293,34 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 14,
     borderWidth: 1.5,
-    marginBottom: 20,
+    marginBottom: 16,
   },
-  biometricTitle: {
-    fontSize: 15,
+  bioTitle: {
+    fontSize: 14,
     fontWeight: '700',
   },
-  biometricDesc: {
-    fontSize: 12,
+  bioSub: {
+    fontSize: 11,
     marginTop: 2,
+  },
+  googleBtn: {
+    marginBottom: 4,
+  },
+  dividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 12,
+    gap: 12,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+  },
+  dividerText: {
+    fontSize: 11,
+    fontWeight: '500',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   errorBox: {
     padding: 12,
@@ -275,9 +330,10 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: 13,
     fontWeight: '500',
+    textAlign: 'center',
   },
   form: {
-    gap: 18,
+    gap: 14,
   },
   inputGroup: {
     gap: 6,
@@ -291,7 +347,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
   },
-  forgotLink: {
+  forgotText: {
     fontSize: 12,
     fontWeight: '600',
   },
@@ -300,37 +356,45 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1,
     borderRadius: 12,
-    paddingHorizontal: 14,
-    height: 50,
+    paddingHorizontal: 12,
+    height: 48,
   },
   inputIcon: {
     marginRight: 10,
   },
   input: {
     flex: 1,
-    fontSize: 15,
+    fontSize: 14,
+  },
+  eyeBtn: {
+    padding: 4,
   },
   demoBtn: {
-    paddingVertical: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 10,
     borderRadius: 12,
     borderWidth: 1,
-    alignItems: 'center',
+    borderStyle: 'dashed',
+    marginTop: 4,
   },
-  demoBtnText: {
-    fontSize: 13,
+  demoText: {
+    fontSize: 12,
     fontWeight: '600',
   },
   footer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: 32,
+    alignItems: 'center',
+    marginTop: 24,
   },
   footerText: {
-    fontSize: 14,
+    fontSize: 13,
   },
   signupLink: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '700',
   },
 });
-

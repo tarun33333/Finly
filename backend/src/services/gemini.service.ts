@@ -130,7 +130,12 @@ Important rules:
 `;
 
         const imagePart = this.fileToGenerativePart(filePath, mimeType);
-        const result = await model.generateContent([prompt, imagePart]);
+        const result = (await Promise.race([
+          model.generateContent([prompt, imagePart]),
+          new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error('Gemini API call timed out after 12s')), 12000)
+          ),
+        ])) as any;
         let responseText = result.response.text().trim();
 
         // Strip Markdown code fencing if present
@@ -240,7 +245,12 @@ Return ONLY a valid JSON object matching:
 `;
 
         const imagePart = this.fileToGenerativePart(filePath, mimeType);
-        const result = await model.generateContent([prompt, imagePart]);
+        const result = (await Promise.race([
+          model.generateContent([prompt, imagePart]),
+          new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error('Gemini API call timed out after 12s')), 12000)
+          ),
+        ])) as any;
         let responseText = result.response.text().trim();
 
         if (responseText.startsWith('```')) {

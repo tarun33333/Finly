@@ -30,13 +30,19 @@ const allowedMimes = [
   'application/pdf',
 ];
 
+const allowedExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.pdf'];
+
 export const upload = multer({
   storage,
   limits: {
     fileSize: env.MAX_UPLOAD_MB * 1024 * 1024, // 8MB
   },
   fileFilter: (_req, file, cb) => {
-    if (allowedMimes.includes(file.mimetype)) {
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (
+      allowedMimes.includes(file.mimetype) ||
+      (allowedExtensions.includes(ext) && (file.mimetype === 'application/octet-stream' || !file.mimetype))
+    ) {
       cb(null, true);
     } else {
       cb(new AppError('Invalid file type. Only JPEG, PNG, WEBP, and PDF files are allowed.', 400, 'INVALID_FILE_TYPE'));

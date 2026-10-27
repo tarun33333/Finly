@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { useThemeStore } from '../../store/themeStore';
 import { useAuthStore } from '../../store/authStore';
 import { Sun, Moon, Bell } from 'lucide-react-native';
@@ -39,13 +39,20 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <View style={styles.textContainer}>
-        <Text style={[theme.typography.caption, { color: theme.colors.textSecondary }]}>
-          {subtitle || `${getGreeting()},`}
-        </Text>
-        <Text style={[theme.typography.h2, { color: theme.colors.textPrimary }]}>
-          {title || firstName}
-        </Text>
+      <View style={styles.leftRow}>
+        <Image
+          source={require('../../../assets/images/logo.png')}
+          style={styles.headerLogo}
+          resizeMode="contain"
+        />
+        <View style={styles.textContainer}>
+          <Text style={[theme.typography.caption, { color: theme.colors.textSecondary }]}>
+            {subtitle || `${getGreeting()},`}
+          </Text>
+          <Text style={[theme.typography.h2, { color: theme.colors.textPrimary }]}>
+            {title || firstName}
+          </Text>
+        </View>
       </View>
 
       <View style={styles.actionContainer}>
@@ -86,6 +93,17 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingVertical: 12,
+  },
+  leftRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  headerLogo: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    marginRight: 12,
   },
   textContainer: {
     flex: 1,

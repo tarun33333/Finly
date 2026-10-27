@@ -1,6 +1,6 @@
 import { Platform, Alert } from 'react-native';
 import * as Sharing from 'expo-sharing';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 
 export const downloadCsvFile = async (csvData: string, filenamePrefix = 'finly_transactions'): Promise<void> => {
   const filename = `${filenamePrefix}_${Date.now()}.csv`;
@@ -19,16 +19,17 @@ export const downloadCsvFile = async (csvData: string, filenamePrefix = 'finly_t
   }
 
   try {
-    const docDir = (FileSystem as any).documentDirectory || '';
+    const docDir = FileSystem.documentDirectory || FileSystem.cacheDirectory || '';
     const fileUri = `${docDir}${filename}`;
     await FileSystem.writeAsStringAsync(fileUri, csvData, {
-      encoding: (FileSystem as any).EncodingType?.UTF8 || 'utf8',
+      encoding: FileSystem.EncodingType.UTF8,
     });
 
     if (await Sharing.isAvailableAsync()) {
       await Sharing.shareAsync(fileUri, {
         mimeType: 'text/csv',
         dialogTitle: 'Export CSV',
+        UTI: 'public.comma-separated-values-text',
       });
     } else {
       Alert.alert('File Saved', `Exported to ${fileUri}`);

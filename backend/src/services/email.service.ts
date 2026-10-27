@@ -23,7 +23,7 @@ class EmailService {
     const link = `${env.APP_DEEP_LINK}verify-email?token=${token}`;
     logger.info({ email, link, token }, `[EmailService] Verification Token: ${token}`);
 
-    if (env.EMAIL_PROVIDER === 'console' || !this.transporter) {
+    if (process.env.NODE_ENV === 'test' || env.EMAIL_PROVIDER === 'console' || !this.transporter) {
       console.log('\n=================== EMAIL VERIFICATION ===================');
       console.log(`To: ${email}`);
       console.log(`Verification Token: ${token}`);
@@ -55,7 +55,7 @@ class EmailService {
     const link = `${env.APP_DEEP_LINK}reset-password?token=${token}`;
     logger.info({ email, link, token }, `[EmailService] Password Reset Token: ${token}`);
 
-    if (env.EMAIL_PROVIDER === 'console' || !this.transporter) {
+    if (process.env.NODE_ENV === 'test' || env.EMAIL_PROVIDER === 'console' || !this.transporter) {
       console.log('\n=================== PASSWORD RESET ===================');
       console.log(`To: ${email}`);
       console.log(`Password Reset Token: ${token}`);
