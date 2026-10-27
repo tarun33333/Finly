@@ -1,0 +1,42 @@
+export const palette = {
+  primary: '#635BFF',
+  primaryDark: '#4E45E4',
+  primaryLight: '#857FFF',
+  secondary: '#20C997',
+  accent: '#FFB84D',
+  info: '#3B82F6',
+  expense: '#F97373',
+  income: '#16A34A',
+  warning: '#F59E0B',
+  white: '#FFFFFF',
+  black: '#000000',
+
+  light: {
+    background: '#F7F8FC',
+    surface: '#FFFFFF',
+    surfaceElevated: '#FFFFFF',
+    textPrimary: '#171A2B',
+    textSecondary: '#71758A',
+    textMuted: '#9CA3AF',
+    border: '#E7E9F2',
+    borderSubtle: '#F1F3F9',
+    card: '#FFFFFF',
+    cardBorder: '#E7E9F2',
+    badgeBackground: '#F0EFFF',
+  },
+
+  dark: {
+    background: '#10121C',
+    surface: '#191C2A',
+    surfaceElevated: '#22263A',
+    textPrimary: '#F5F6FF',
+    textSecondary: '#A7ADC4',
+    textMuted: '#6B7280',
+    border: '#30354A',
+    borderSubtle: '#22263A',
+    card: '#191C2A',
+    cardBorder: '#30354A',
+    badgeBackground: '#262840',
+  },
+};
+
